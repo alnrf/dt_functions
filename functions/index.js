@@ -42,9 +42,9 @@ exports.addMovie = functions.https.onRequest((req, res) => {
         .collection('media')
         .add(newMovie)
         .then((doc) => {
-            res.json({ message: `O documento ${doc.id} foi criado com sucesso` });
+            res.json({ message: `O documento ${doc.id} foi criado com sucesso!` });
         })
         .catch((err) => {
-            res.status(500).json({ error: 'Algo deu errado' });
+            res.status(500).json({ error: 'Algo deu errado!' });
         });
 });
