@@ -2,29 +2,25 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
 admin.initializeApp();
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-//
-exports.helloWorld = functions.https.onRequest((request, response) => {
- response.send("Hello from Firebase!");
-});
 
+const express = require('express');
+const app = express();
 
-exports.getMovies = functions.https.onRequest((req, res) => {
+app.get('/movies', (req, res) => {
     admin
-        .firestore()
-        .collection('media')
-        .get().then((data) => {
-            let movies = [];
-            data.forEach((doc) => {
-                movies.push(doc.data());
-            });
-            return res.json(movies);
-        })
-        .catch((err) => console.log(err));
+    .firestore()
+    .collection('media')
+    .get().then((data) => {
+        let movies = [];
+        data.forEach((doc) => {
+            movies.push(doc.data());
+        });
+        return res.json(movies);
+    })
+    .catch((err) => console.log(err));
 });
 
-exports.addMovie = functions.https.onRequest((req, res) => {
+app.post('/newMovie',(req, res) => {
     const newMovie = {
         category: req.body.category,
         cover: req.body.cover,
@@ -46,5 +42,9 @@ exports.addMovie = functions.https.onRequest((req, res) => {
         })
         .catch((err) => {
             res.status(500).json({ error: 'Algo deu errado!' });
+            console.log(err);
         });
 });
+
+
+exports.api = functions.https.onRequest(app);
