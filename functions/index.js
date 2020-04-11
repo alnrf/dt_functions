@@ -1,12 +1,22 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-
+const app = require('express')();
 admin.initializeApp();
 
-const express = require('express');
-const app = express();
+const config = {
+    apiKey: "AIzaSyCisQWZk9dOgQ-UGneQurDcJgkPoLSzAB0",
+    authDomain: "biblioteca-207ae.firebaseapp.com",
+    databaseURL: "https://biblioteca-207ae.firebaseio.com",
+    projectId: "biblioteca-207ae",
+    storageBucket: "biblioteca-207ae.appspot.com",
+    messagingSenderId: "362739539596",
+    appId: "1:362739539596:web:d9cbfc2e76013c62"
+  };
 
-app.get('/movies', (req, res) => {
+const firebase = require('firebase');
+firebase.initializeApp(config);
+
+app.get('/getMovies', (req, res) => {
     admin
     .firestore()
     .collection('media')
@@ -58,5 +68,23 @@ app.post('/newMovie',(req, res) => {
         });
 });
 
+//Rota de Sign-up
+app.post('/signup', (req,res) => {
+    const newUser = {
+        email: req.body.email,
+        password: req.body.password,
+        confirmPassword: req.body.confirmPassword,
+        handle: req.body.handle,
+    };
+
+    firebase.auth().createUserWithEmailAndPassword(newUser.email, newUser.password)
+        .then((data)=> {
+            return res.status(201).json({ message: `Usuário ${data.user.uid} cadastrado com sucesso`});
+        })
+        .catch((err) => {
+            console.error(err);
+            return res.status(500).json({err: err.code});
+        });
+});
 
 exports.api = functions.https.onRequest(app);
