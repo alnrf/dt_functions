@@ -10,10 +10,22 @@ app.get('/movies', (req, res) => {
     admin
     .firestore()
     .collection('media')
+    .orderBy('title_pt', 'asc')
     .get().then((data) => {
         let movies = [];
         data.forEach((doc) => {
-            movies.push(doc.data());
+            movies.push({
+                movieId: doc.id,
+                title_pt: doc.data().title_pt,
+                title_eng: doc.data().title_eng,
+                category: doc.data().category,
+                year: doc.data().year,
+                cover: doc.data().cover,
+                media_type: doc.data().media_type,
+                package: doc.data().package,
+                season: doc.data().season,
+                date: doc.data().date    
+            });
         });
         return res.json(movies);
     })
@@ -24,7 +36,7 @@ app.post('/newMovie',(req, res) => {
     const newMovie = {
         category: req.body.category,
         cover: req.body.cover,
-        date: admin.firestore.Timestamp.fromDate(new Date()),
+        date: new Date().toISOString(),
         media_type: req.body.media_type,
         package: req.body.package,
         season: req.body.season,
