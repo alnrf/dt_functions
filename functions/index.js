@@ -35,7 +35,7 @@ app.get('/getMovies', (req, res) => {
                 media_type: doc.data().media_type,
                 package: doc.data().package,
                 season: doc.data().season,
-                date: doc.data().date    
+                date: doc.data().date
             });
         });
         return res.json(movies);
@@ -43,7 +43,35 @@ app.get('/getMovies', (req, res) => {
     .catch((err) => console.log(err));
 });
 
-app.post('/newMovie',(req, res) => {
+const FBAuth = (req, res, next) => {
+    let idToken;
+    if(req.headers.authorization && req.headers.authorization.startsWith('Bearer ')){
+        idToken = req.headers.authorization.split('Bearer ')[1];
+    } else {
+        console.error('Token não encontrado!')
+        return res.status(403).json({ error: 'Não autorizado!'});
+    }
+
+    admin.auth().verifyIdToken(idToken)
+        .then(decodedToken => {
+            req.user = decodedToken;
+            console.log(decodedToken);
+            return db.collection('users')
+                .where('userId', '==', req.user.uid)
+                .limit(1)
+                .get();
+        })
+        .then(data => {
+            req.user.handle = data.docs[0].data().handle;
+            return next();
+        })
+        .catch(err => {
+            console.error('Erro ao verificar o token ', err);
+            return res.status(403).json(err);
+        })
+}
+
+app.post('/newMovie', FBAuth, (req, res) => {
     const newMovie = {
         category: req.body.category,
         cover: req.body.cover,
@@ -53,7 +81,8 @@ app.post('/newMovie',(req, res) => {
         season: req.body.season,
         title_eng: req.body.title_eng,
         title_pt: req.body.title_pt,
-        year: req.body.year
+        year: req.body.year,
+        userHandle: req.user.handle
     };
 
     db
