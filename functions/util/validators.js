@@ -38,4 +38,4 @@ exports.validateLoginData = (data) => {
         errors,
         valid: Object.keys(errors).length === 0 ? true : false
     }
-}
+};
