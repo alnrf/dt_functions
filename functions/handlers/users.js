@@ -5,7 +5,7 @@ const config = require('../util/config');
 const firebase = require('firebase');
 firebase.initializeApp(config);
 
-const { validateSignupData, validateLoginData } = require('../util/validators');
+const { validateSignupData, validateLoginData, reduceUserDetails } = require('../util/validators');
 
 exports.signup = (req,res) => {
     const newUser = {
@@ -87,6 +87,47 @@ exports.login = (req,res) => {
         });
 };
 
+// Add USer Details
+
+exports.addUserDetails = (req, res) => {
+    let userDetails = reduceUserDetails(req.body);
+
+    db.doc(`/users/${req.user.handle}`).update(userDetails)
+        .then(() => {
+            return res.json({ message: 'Detalhes adicionados/atualizados com sucesso!' });
+        })
+        .catch(err => {
+            console.error(err);
+            return res.status(500).json({ error: err.code });
+        });
+};
+
+// Recuperar dados do usuário Logado
+
+exports.getAuthenticatedUser = (req, res) => {
+    let userData = {};
+
+    db.doc(`/user/${req.user.handle}`).get()
+        .then(doc => {
+            if(doc.exists){
+                userData.credentials = doc.data();
+                return db.collection('likes').where('userHandle', '==', req.user.handle).get()
+            }
+        })
+        .then(data => {
+            userData.likes = [];
+            data.forEach(doc => {
+                userData.likes.push(doc.data());
+            });
+            return res.json(userData);
+        })
+        .catch(err => {
+            console.error(err);
+            return res.status(500).json({ error: err.code});
+        });
+};
+
+// Uploade de imagem de perfil
 exports.uploadImage = (req, res) => {
     const BusBoy = require('busboy');
     const path = require('path');
@@ -105,7 +146,7 @@ exports.uploadImage = (req, res) => {
         // Removerá o "." do arquivo e considerará apenas o ponto da extensão
         const imageExtension = filename.split('.')[filename.split('.').length - 1];
         // Gerará um número aleatório para o nome do arquivo
-        imageFileName = `${Math.round(Math.random()*100000000000)}.${imageExtension}`;
+        imageFileName = `img_${Math.round(Math.random()*100000000000)}.${imageExtension}`;
         const filepath = path.join(os.tmpdir(), imageFileName);
         imageToBeUploaded = { filepath, mimetype };
         file.pipe(fs.createWriteStream(filepath));
