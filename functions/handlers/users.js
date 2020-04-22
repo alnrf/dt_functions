@@ -104,28 +104,28 @@ exports.addUserDetails = (req, res) => {
 
 // Recuperar dados do usuário Logado
 
-exports.getAuthenticatedUser = (req, res) => {
-    let userData = {};
+// exports.getAuthenticatedUser = (req, res) => {
+//     let userData = {};
 
-    db.doc(`/user/${req.user.handle}`).get()
-        .then(doc => {
-            if(doc.exists){
-                userData.credentials = doc.data();
-                return db.collection('likes').where('userHandle', '==', req.user.handle).get()
-            }
-        })
-        .then(data => {
-            userData.likes = [];
-            data.forEach(doc => {
-                userData.likes.push(doc.data());
-            });
-            return res.json(userData);
-        })
-        .catch(err => {
-            console.error(err);
-            return res.status(500).json({ error: err.code});
-        });
-};
+//     db.doc(`/user/${req.user.handle}`).get()
+//         .then(doc => {
+//             if(doc.exists){
+//                 userData.credentials = doc.data();
+//                 return db.collection('likes').where('userHandle', '==', req.user.handle).get()
+//             }
+//         })
+//         .then(data => {
+//             userData.likes = [];
+//             data.forEach(doc => {
+//                 userData.likes.push(doc.data());
+//             });
+//             return res.json(userData);
+//         })
+//         .catch(err => {
+//             console.error(err);
+//             return res.status(500).json({ error: err.code});
+//         });
+// };
 
 // Uploade de imagem de perfil
 exports.uploadImage = (req, res) => {
