@@ -50,3 +50,23 @@ exports.postNewMovie = (req, res) => {
             console.log(err);
         });
 };
+
+/* exports.deleteMovie = (req, res) => {
+    const document = db.doc(`/media/${req.params.movieId}`);
+    document
+        .get()
+        .then(doc => {
+            if (!doc.exists) {
+                return res.status(404).json({ error: 'Filme não encontrado!'});
+            } else {
+                return document.delete();
+            }
+        })
+        .then(() => {
+           res.json({ message: 'Filme deletado com sucesso!'});
+        })
+        .catch((err) => {
+            console.error(err);
+            return res.status(500).json({ error: err.code });
+        });
+}; */
