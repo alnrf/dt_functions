@@ -1,54 +1,87 @@
 const { db } = require('../util/admin');
 
 exports.getAllMovies = (req, res) => {
-    db
-    .collection('media')
+  db.collection('media')
     .orderBy('title_pt', 'asc')
-    .get().then((data) => {
-        let movies = [];
-        data.forEach((doc) => {
-            movies.push({
-                movieId: doc.id,
-                title_pt: doc.data().title_pt,
-                title_eng: doc.data().title_eng,
-                category: doc.data().category,
-                year: doc.data().year,
-                cover: doc.data().cover,
-                media_type: doc.data().media_type,
-                package: doc.data().package,
-                season: doc.data().season,
-                date: doc.data().date
-            });
+    .get()
+    .then((data) => {
+      let movies = [];
+      data.forEach((doc) => {
+        movies.push({
+          movieId: doc.id,
+          title_pt: doc.data().title_pt,
+          title_eng: doc.data().title_eng,
+          category: doc.data().category,
+          year: doc.data().year,
+          cover: doc.data().cover,
+          media_type: doc.data().media_type,
+          package: doc.data().package,
+          season: doc.data().season,
+          date: doc.data().date,
         });
-        return res.json(movies);
+      });
+      return res.json(movies);
     })
     .catch((err) => console.log(err));
-}
+};
 
 exports.postNewMovie = (req, res) => {
-    const newMovie = {
-        category: req.body.category,
-        cover: req.body.cover,
-        date: new Date().toISOString(),
-        media_type: req.body.media_type,
-        package: req.body.package,
-        season: req.body.season,
-        title_eng: req.body.title_eng,
-        title_pt: req.body.title_pt,
-        year: req.body.year,
-        userHandle: req.user.handle
-    };
+  const newMovie = {
+    category: req.body.category,
+    cover: req.body.cover,
+    date: new Date().toISOString(),
+    media_type: req.body.media_type,
+    package: req.body.package,
+    season: req.body.season,
+    title_eng: req.body.title_eng,
+    title_pt: req.body.title_pt,
+    year: req.body.year,
+    userHandle: req.user.handle,
+  };
 
-    db
-        .collection('media')
-        .add(newMovie)
-        .then((doc) => {
-            res.json({ message: `O documento ${doc.id} foi criado com sucesso!` });
-        })
-        .catch((err) => {
-            res.status(500).json({ error: 'Algo deu errado!' });
-            console.log(err);
+  db.collection('media')
+    .add(newMovie)
+    .then((doc) => {
+      res.json({
+        message: `O documento ${doc.id} foi criado com sucesso!`,
+      });
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: 'Algo deu errado!',
+      });
+      console.log(err);
+    });
+};
+
+exports.getMovie = (req, res) => {
+  let movieData = {};
+  db.doc(`/media/${req.params.movieId}`)
+    .get()
+    .then((doc) => {
+      if (!doc.exists) {
+        return res.status(404).json({
+          error: 'Filme não encontrado!',
         });
+      }
+      movieData = doc.data();
+      movieData.movieId = doc.id;
+      return db
+        .collection('comments')
+        .where('movieId', '==', req.params.movieId)
+        .get();
+    })
+    .then((data) => {
+      movieData.comments = [];
+      data.forEach((doc) => {
+        movieData.comments.push(doc.data());
+      });
+      return res.json(movieData);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).json({ error: err.code });
+    });
 };
 
 /* exports.deleteMovie = (req, res) => {

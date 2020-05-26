@@ -4,7 +4,8 @@ const FBAuth = require('./util/fbAuth');
 
 const {
     getAllMovies,
-    postNewMovie
+    postNewMovie,
+    getMovie
 } = require('./handlers/movies');
 
 const {
@@ -15,16 +16,16 @@ const {
 } = require('./handlers/users');
 
 // Movies Routes
-app.get('/getAllMovies', getAllMovies );
+app.get('/getAllMovies', getAllMovies);
 app.post('/newMovie', FBAuth, postNewMovie);
+app.get('/getMovie/:movieId', getMovie);
 // app.get('/getSingleMovie/:movieId', getSingleMovie);
 // TODO: app.delete('/delete/:movieId', FBAuth, deleteMovie);
 // TODO: like movie
 // TODO: unlike movie
-// TODO: comment movie
 
 //Signup & Login routes
-app.post('/signup', signup );
+app.post('/signup', signup);
 app.post('/login', login);
 app.post('/user/image', FBAuth, uploadImage);
 app.post('/user', FBAuth, addUserDetails);
