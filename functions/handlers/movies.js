@@ -1,5 +1,7 @@
 const { db } = require('../util/admin');
 
+
+// Recupera todas as mídias
 exports.getAllMovies = (req, res) => {
   db.collection('media')
     .orderBy('title_pt', 'asc')
@@ -25,6 +27,7 @@ exports.getAllMovies = (req, res) => {
     .catch((err) => console.log(err));
 };
 
+// Posta uma nova mídia
 exports.postNewMovie = (req, res) => {
   const newMovie = {
     category: req.body.category,
@@ -54,6 +57,7 @@ exports.postNewMovie = (req, res) => {
     });
 };
 
+// Recupera uma única midia e seus comentários
 exports.getMovie = (req, res) => {
   let movieData = {};
   db.doc(`/media/${req.params.movieId}`)
@@ -68,6 +72,7 @@ exports.getMovie = (req, res) => {
       movieData.movieId = doc.id;
       return db
         .collection('comments')
+        .orderBy('createdAt','desc')
         .where('movieId', '==', req.params.movieId)
         .get();
     })
@@ -81,6 +86,34 @@ exports.getMovie = (req, res) => {
     .catch((err) => {
       console.error(err);
       res.status(500).json({ error: err.code });
+    });
+};
+
+//Cria novo comentário
+exports.postNewComent = (req, res) => {
+  if(req.body.body.trim() === '') return res.status(400).json({ error: 'Não pode ser vazio!'});
+
+  const newComment = {
+    body: req.body.body,
+    createdAt: new Date().toISOString(),
+    movieId: req.params.movieId,
+    userHandle: req.user.handle,
+    imageUrl: req.user.imageUrl
+  };
+
+  db.doc(`/media/${req.params.movieId}`).get()
+    .then(doc => {
+      if(!doc.exists){
+        return res.status(404).json({ error: 'Mídia não encontrada!'});
+      }
+      return db.collection('comments').add(newComment);
+    })
+    .then(() => {
+      res.json(newComment);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({ error: 'Algo saiu errado!'});
     });
 };
 
