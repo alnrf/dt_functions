@@ -6,7 +6,9 @@ const {
     getAllMovies,
     postNewMovie,
     getMovie,
-    postNewComent
+    postNewComent,
+    likeMovie,
+    unlikeMovie
 } = require('./handlers/movies');
 
 const {
@@ -22,8 +24,8 @@ app.post('/newMovie', FBAuth, postNewMovie);
 app.get('/getMovie/:movieId', getMovie);
 app.post('/movie/:movieId/comment', FBAuth, postNewComent)
 // TODO: app.delete('/delete/:movieId', FBAuth, deleteMovie);
-// TODO: like movie
-// TODO: unlike movie
+app.get('/movie/:movieId/like', FBAuth, likeMovie);
+app.get('/movie/:movieId/unlike', FBAuth, unlikeMovie); 
 
 //Signup & Login routes
 app.post('/signup', signup);
