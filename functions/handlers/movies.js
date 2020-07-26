@@ -1,6 +1,6 @@
 const { db } = require("../util/admin");
 
-// Recupera todas as mídias
+// Recupera todas as registros
 exports.getAllMovies = (req, res) => {
   db.collection("media")
     .orderBy("title_pt", "asc")
@@ -26,7 +26,7 @@ exports.getAllMovies = (req, res) => {
     .catch((err) => console.log(err));
 };
 
-// Posta uma nova mídia
+// Posta uma nova entrada
 exports.postNewMovie = (req, res) => {
   const newMovie = {
     category: req.body.category,
@@ -40,7 +40,6 @@ exports.postNewMovie = (req, res) => {
     year: req.body.year,
     userHandle: req.user.handle,
     userImage: req.user.imageUrl,
-    likeCount: 0,
     commentCount: 0,
   };
 
@@ -59,7 +58,7 @@ exports.postNewMovie = (req, res) => {
     });
 };
 
-// Recupera uma única midia e seus comentários
+// Recupera um único registro e seus comentários
 exports.getMovie = (req, res) => {
   let movieData = {};
   db.doc(`/media/${req.params.movieId}`)
@@ -110,6 +109,9 @@ exports.postNewComent = (req, res) => {
       if (!doc.exists) {
         return res.status(404).json({ error: "Mídia não encontrada!" });
       }
+      return doc.ref.update({ commentCount: doc.data().commentCount + 1});
+    })
+    .then(() => {
       return db.collection("comments").add(newComment);
     })
     .then(() => {
@@ -121,113 +123,26 @@ exports.postNewComent = (req, res) => {
     });
 };
 
-exports.likeMovie = (res, req) => {
-  const likeDocument = db
-    .collection("likes")
-    .where("userHandle", "==", req.user.handle)
-    .where("movieId", "==", req.params.movieId)
-    .limit(1);
-
-  const movieDocument = db.doc(`/media/${req.params.movieId}`);
-
-  let movieData;
-
-  movieDocument
+//Deleta uma entrada
+exports.deleteMovie = (req, res) => {
+  const document = db.doc(`/media/${req.params.movieId}`);
+  document
     .get()
     .then((doc) => {
-      if (doc.exists) {
-        movieData = doc.data();
-        movieData.movieId = doc.id;
-        return likeDocument.get();
+      if (!doc.exists) {
+        return res.status(404).json({ error: 'Não encontrado' });
+      }
+      if (doc.data().userHandle !== req.user.handle) {
+        return res.status(403).json({ error: 'Não autorizado' });
       } else {
-        return res.status(404).json({ error: "Filme não encontrado!" });
+        return document.delete();
       }
     })
-    .then((data) => {
-      if (data.empty) {
-        return db
-          .collection("likes")
-          .add({
-            movieId: req.params.movieId,
-            userHandle: req.user.handle,
-          })
-          .then(() => {
-            movieData.likeCount++;
-            return movieDocument.update({ likeCount: movieData.likeCount });
-          })
-          .then(() => {
-            return res.json(movieData);
-          });
-      } else {
-        return res.status(400).json({ error: "Filme já recebeu like!" });
-      }
+    .then(() => {
+      res.json({ message: 'Deletado com sucesso!' });
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ error: err.code });
+      return res.status(500).json({ error: err.code });
     });
 };
-
-exports.unlikeMovie = (res, req) => {
-  const likeDocument = db
-    .collection("likes")
-    .where("userHandle", "==", req.user.handle)
-    .where("movieId", "==", req.params.movieId)
-    .limit(1);
-
-  const movieDocument = db.doc(`/media/${req.params.movieId}`);
-
-  let movieData;
-
-  movieDocument
-    .get()
-    .then((doc) => {
-      if (doc.exists) {
-        movieData = doc.data();
-        movieData.movieId = doc.id;
-        return likeDocument.get();
-      } else {
-        return res.status(404).json({ error: "Filme não encontrado!" });
-      }
-    })
-    .then((data) => {
-      if (data.empty) {
-        return res.status(400).json({ error: "Filme não recebeu like!" });
-      } else {
-        return db
-          .doc(`/likes/${data.docs[0].data().id}`)
-          .delete()
-          .then(() => {
-            movieData.likeCount--;
-            return movieDocument.update({ likeMovie: movieData.likeCount });
-          })
-          .then(() => {
-            res.json(movieData);
-          });
-      }
-    })
-    .catch((err) => {
-      console.error(err);
-      res.status(500).json({ error: err.code });
-    });
-};
-
-/* exports.deleteMovie = (req, res) => {
-    const document = db.doc(`/media/${req.params.movieId}`);
-    document
-        .get()
-        .then(doc => {
-            if (!doc.exists) {
-                return res.status(404).json({ error: 'Filme não encontrado!'});
-            } else {
-                return document.delete();
-            }
-        })
-        .then(() => {
-           res.json({ message: 'Filme deletado com sucesso!'});
-        })
-        .catch((err) => {
-            console.error(err);
-            return res.status(500).json({ error: err.code });
-        });
-}; */

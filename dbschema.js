@@ -21,8 +21,8 @@ let db = {
 
   login: [
     {
-      email: "clubeandroid@gmail.com",
-      password: "123456",
+      "email": "clubeandroid@gmail.com",
+      "password": "123456",
     },
   ],
 
